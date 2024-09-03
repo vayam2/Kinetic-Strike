@@ -3,6 +3,7 @@ import math
 from dronekit import connect, VehicleMode, LocationGlobalRelative
 import numpy as np
 import dronekit
+from pymavlink import mavutil 
 # Connect to the vehicle
 vehicle = connect('127.0.0.1:14550', wait_ready=True)
 
@@ -85,32 +86,33 @@ def euler_to_quaternion(roll, pitch, yaw):
     
     return q
 
-def set_yaw(yaw):
-    print(f"Setting yaw to: {yaw}")
-    yaw_rad = math.radians(yaw)  # Convert yaw from degrees to radians
-    q = euler_to_quaternion(0, 0, yaw_rad)  # Convert yaw to quaternion
+def condition_yaw(degree, relative=True):
+    """
+    Rotate the UAV to a specific yaw angle.
+    """
+    if relative:
+        is_relative = 1  # yaw relative to current position
+    else:
+        is_relative = 0  # yaw is an absolute angle
 
-    # Send MAVLink message for attitude target
-    msg = vehicle.message_factory.set_attitude_target_encode(
-        0,                # time_boot_ms
-        0,                # target system
-        0,                # target component
-        0b00000100,       # type_mask (only yaw is enabled)
-        q.tolist(),        # Quaternion [w, x, y, z]
-        0,                # body_roll_rate
-        0,                # body_pitch_rate
-        0,                # body_yaw_rate
-        0                 # thrust
-    )
+    msg = vehicle.message_factory.command_long_encode(
+        0, 0,  # target system, target component
+        mavutil.mavlink.MAV_CMD_CONDITION_YAW,  # command
+        0,  # confirmation
+        degree,  # param 1, yaw in degrees
+        0,  # param 2, yaw speed deg/s
+        1,  # param 3, direction -1 ccw, 1 cw
+        is_relative,  # param 4, relative/absolute
+        0, 0, 0)  # param 5-7 not used
+
+    # Send the command to the vehicle
     vehicle.send_mavlink(msg)
-    time.sleep(1)  # Give some time for the yaw to update
-
-
 
 def align_heading_to_target(target_location):
     print("Aligning heading to target")
     yaw = calculate_yaw_to_target(target_location)
-    set_yaw(yaw)
+    print(yaw)
+    condition_yaw(yaw)
 
 def adjust_course_to_target(target_location, current_speed):
     current_location = vehicle.location.global_relative_frame
@@ -131,17 +133,13 @@ def adjust_course_to_target(target_location, current_speed):
 
 def trigger_final_mechanism():
     print("Triggering final strike mechanism")
-    # Example placeholder code:
-    # strike_servo.angle = 180
-    # OR
-    # GPIO.output(trigger_pin, GPIO.HIGH)
 
 try:
     arm_and_takeoff(10)  # Takeoff to 20 meters
-    target_location = LocationGlobalRelative(-35.363261, 149.165230, 0)  # Example target at ground level
+    target_location = LocationGlobalRelative( -35.36247610, 149.16536133  , 10)  # Example target at ground level
     
-    align_heading_to_target(target_location)  # Align the heading towards the target
-    time.sleep(5)
+    align_heading_to_target(target_location)# Align the heading towards the target
+    time.sleep(10)
     max_speed = 15
     acceleration = 1
     current_speed = 5
