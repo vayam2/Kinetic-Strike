@@ -124,22 +124,25 @@ def adjust_course_to_target(target_location, current_speed):
         vx = 15
         t = distance/ 15
         vz = vehicle.location.global_relative_frame.alt/t
+        print(vehicle.location.global_relative_frame.alt)
+        if vehicle.location.global_relative_frame.alt <0.1:
+            vehicle.armed = False
         vy = 0
     else:
         vx = 0
         vy = 0
-    print(f"Calculated velocities - vx: {vx}, vy: {vy}, vz: {vz}")
+    #print(f"Calculated velocities - vx: {vx}, vy: {vy}, vz: {vz}")
     set_velocity_body(vx, vy, vz)
 
 def trigger_final_mechanism():
     print("Triggering final strike mechanism")
 
 try:
-    arm_and_takeoff(10)  # Takeoff to 20 meters
+    arm_and_takeoff(20)  # Takeoff to 20 meters
     target_location = LocationGlobalRelative( -35.36247610, 149.16536133  , 10)  # Example target at ground level
     
     align_heading_to_target(target_location)# Align the heading towards the target
-    time.sleep(10)
+    time.sleep(3)
     max_speed = 15
     acceleration = 1
     current_speed = 5
