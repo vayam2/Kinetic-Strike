@@ -87,6 +87,14 @@ def euler_to_quaternion(roll, pitch, yaw):
     
     return q
 
+def get_current_yaw():
+    """
+    Get the current yaw angle of the UAV.
+    """
+    # Fetch the current heading from the vehicle's global relative frame
+    # Assuming the heading is provided in degrees
+    return vehicle.heading
+
 def condition_yaw(degree, relative=True):
     """
     Rotate the UAV to a specific yaw angle.
@@ -122,9 +130,18 @@ def condition_yaw(degree, relative=True):
 
 def align_heading_to_target(target_location):
     print("Aligning heading to target")
-    yaw = calculate_yaw_to_target(target_location)
-    print(yaw)
-    condition_yaw(yaw)
+    current_yaw = get_current_yaw()
+    target_yaw = calculate_yaw_to_target(target_location)
+    
+    # Compute the relative yaw adjustment
+    relative_yaw = target_yaw - current_yaw
+    if relative_yaw > 180:
+        relative_yaw -= 360
+    elif relative_yaw < -180:
+        relative_yaw += 360
+    
+    print(f"Current yaw: {current_yaw}, Target yaw: {target_yaw}, Relative yaw: {relative_yaw}")
+    condition_yaw(relative_yaw)
 
 def adjust_course_to_target(target_location, current_speed):
     current_location = vehicle.location.global_relative_frame
