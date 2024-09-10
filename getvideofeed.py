@@ -4,6 +4,7 @@ from dronekit import connect, VehicleMode, LocationGlobalRelative
 import numpy as np
 import dronekit
 from pymavlink import mavutil 
+time.sleep(130)
 # Connect to the vehicle
 vehicle = connect('127.0.0.1:6969', wait_ready=True)
 
@@ -143,7 +144,6 @@ def align_heading_to_target(target_location):
     print(f"Current yaw: {current_yaw}, Target yaw: {target_yaw}, Relative yaw: {relative_yaw}")
     condition_yaw(relative_yaw)
 
-
 def adjust_course_to_target(target_location, current_speed):
     current_location = vehicle.location.global_relative_frame
     dlat = target_location.lat - current_location.lat
@@ -168,15 +168,27 @@ def trigger_final_mechanism():
     print("Triggering final strike mechanism")
 
 try:
-    arm_and_takeoff(10)  # Takeoff to 20 meters
-    target_location = LocationGlobalRelative(  -35.36241187, 149.16389342 , 10)  # Example target at ground level
+    arm_and_takeoff(20)  # Takeoff to 20 meters
+    target_location = LocationGlobalRelative(28.4728932, 77.4283911, 10)  # Example target at ground level
     
     align_heading_to_target(target_location)# Align the heading towards the target
-    time.sleep(10)
-    target_location = LocationGlobalRelative(  -35.36241187, 149.16389342 , 10)  # Example target at ground level
+    time.sleep(5)
+    max_speed = 15
+    acceleration = 1
+    current_speed = 5
     
-    align_heading_to_target(target_location)# Align the heading towards the target
-    time.sleep(10)
-    vehicle.mode = VehicleMode("LAND")
-except:
-    print("vehicle not yaw")
+    while True:
+        distance_to_target = get_distance_meters(target_location)
+        if distance_to_target < 1.5:
+            trigger_final_mechanism()
+            break
+        
+        if current_speed < max_speed:
+            current_speed += acceleration * 0.5
+        
+        adjust_course_to_target(target_location, current_speed)
+        time.sleep(0.1)
+
+finally:
+    print("Closing vehicle connection")
+    vehicle.close()
