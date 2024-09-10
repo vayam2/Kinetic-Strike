@@ -151,7 +151,7 @@ def trigger_final_mechanism():
 
 try:
     arm_and_takeoff(20)  # Takeoff to 20 meters
-    target_location = LocationGlobalRelative( 28.605242599896062, 77.36879418068474, 10)  # Example target at ground level
+    target_location = LocationGlobalRelative(  28.605036794, 77.370099396, 10)  # Example target at ground level
     
     align_heading_to_target(target_location)# Align the heading towards the target
     time.sleep(10)
