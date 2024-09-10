@@ -5,7 +5,6 @@ import numpy as np
 import dronekit
 from pymavlink import mavutil 
 # Connect to the vehicle
-time.sleep(130)
 vehicle = connect('127.0.0.1:6969', wait_ready=True)
 
 def arm_and_takeoff(target_altitude):
@@ -103,8 +102,8 @@ def condition_yaw(degree, relative=True):
         is_relative = 1  # yaw relative to current position
     else:
         is_relative = 0  # yaw is an absolute angle
-    
-    if degree >=0:
+    print("degree", degree)
+    if degree >=0 :
         msg = vehicle.message_factory.command_long_encode(
             0, 0,  # target system, target component
             mavutil.mavlink.MAV_CMD_CONDITION_YAW,  # command
@@ -115,7 +114,8 @@ def condition_yaw(degree, relative=True):
             is_relative,  # param 4, relative/absolute
             0, 0, 0)  # param 5-7 not used
     else: 
-        degree = degree * -1
+        degree =  degree *-1
+        print("CCW" , degree)
         msg = vehicle.message_factory.command_long_encode(
             0, 0,  # target system, target component
             mavutil.mavlink.MAV_CMD_CONDITION_YAW,  # command
@@ -143,6 +143,7 @@ def align_heading_to_target(target_location):
     print(f"Current yaw: {current_yaw}, Target yaw: {target_yaw}, Relative yaw: {relative_yaw}")
     condition_yaw(relative_yaw)
 
+
 def adjust_course_to_target(target_location, current_speed):
     current_location = vehicle.location.global_relative_frame
     dlat = target_location.lat - current_location.lat
@@ -167,8 +168,12 @@ def trigger_final_mechanism():
     print("Triggering final strike mechanism")
 
 try:
-    arm_and_takeoff(20)  # Takeoff to 20 meters
-    target_location = LocationGlobalRelative(  28.605036794, 77.370099396, 10)  # Example target at ground level
+    arm_and_takeoff(10)  # Takeoff to 20 meters
+    target_location = LocationGlobalRelative(  -35.36241187, 149.16389342 , 10)  # Example target at ground level
+    
+    align_heading_to_target(target_location)# Align the heading towards the target
+    time.sleep(10)
+    target_location = LocationGlobalRelative(  -35.36241187, 149.16389342 , 10)  # Example target at ground level
     
     align_heading_to_target(target_location)# Align the heading towards the target
     time.sleep(10)
