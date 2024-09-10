@@ -4,8 +4,8 @@ from dronekit import connect, VehicleMode, LocationGlobalRelative
 import numpy as np
 import dronekit
 from pymavlink import mavutil 
-time.sleep(130)
 # Connect to the vehicle
+time.sleep(130)
 vehicle = connect('127.0.0.1:6969', wait_ready=True)
 
 def arm_and_takeoff(target_altitude):
@@ -95,17 +95,28 @@ def condition_yaw(degree, relative=True):
         is_relative = 1  # yaw relative to current position
     else:
         is_relative = 0  # yaw is an absolute angle
-
-    msg = vehicle.message_factory.command_long_encode(
-        0, 0,  # target system, target component
-        mavutil.mavlink.MAV_CMD_CONDITION_YAW,  # command
-        0,  # confirmation
-        degree,  # param 1, yaw in degrees
-        0,  # param 2, yaw speed deg/s
-        1,  # param 3, direction -1 ccw, 1 cw
-        is_relative,  # param 4, relative/absolute
-        0, 0, 0)  # param 5-7 not used
-
+    
+    if degree >=0:
+        msg = vehicle.message_factory.command_long_encode(
+            0, 0,  # target system, target component
+            mavutil.mavlink.MAV_CMD_CONDITION_YAW,  # command
+            0,  # confirmation
+            degree,  # param 1, yaw in degrees
+            0,  # param 2, yaw speed deg/s
+            1,  # param 3, direction -1 ccw, 1 cw
+            is_relative,  # param 4, relative/absolute
+            0, 0, 0)  # param 5-7 not used
+    else: 
+        degree = degree * -1
+        msg = vehicle.message_factory.command_long_encode(
+            0, 0,  # target system, target component
+            mavutil.mavlink.MAV_CMD_CONDITION_YAW,  # command
+            0,  # confirmation
+            degree,  # param 1, yaw in degrees
+            0,  # param 2, yaw speed deg/s
+            -1,  # param 3, direction -1 ccw, 1 cw
+            is_relative,  # param 4, relative/absolute
+            0, 0, 0)  # param 5-7 not used
     # Send the command to the vehicle
     vehicle.send_mavlink(msg)
 
@@ -140,26 +151,10 @@ def trigger_final_mechanism():
 
 try:
     arm_and_takeoff(20)  # Takeoff to 20 meters
-    target_location = LocationGlobalRelative(28.4728932, 77.4283911, 10)  # Example target at ground level
+    target_location = LocationGlobalRelative( 28.605242599896062, 77.36879418068474, 10)  # Example target at ground level
     
     align_heading_to_target(target_location)# Align the heading towards the target
-    time.sleep(3)
-    max_speed = 15
-    acceleration = 1
-    current_speed = 5
-    
-    while True:
-        distance_to_target = get_distance_meters(target_location)
-        if distance_to_target < 1.5:
-            trigger_final_mechanism()
-            break
-        
-        if current_speed < max_speed:
-            current_speed += acceleration * 0.5
-        
-        adjust_course_to_target(target_location, current_speed)
-        time.sleep(0.1)
-
-finally:
-    print("Closing vehicle connection")
-    vehicle.close()
+    time.sleep(10)
+    vehicle.mode = VehicleMode("LAND")
+except:
+    print("vehicle not yaw")
