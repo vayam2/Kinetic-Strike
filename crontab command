@@ -1,0 +1,1 @@
+@reboot sh /home/indowings/autorun/launcher.sh >/home/indowings/logs/cronlog 2>>
