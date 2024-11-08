@@ -124,7 +124,7 @@ def adjust_course_to_target(target_location):
     distance = get_distance_meters(target_location)
 
     # Maintain constant speed
-    vx = 18
+    vx = 13
     vehicle_altitude = vehicle.location.global_relative_frame.alt
     # Calculate the descent rate (vz) based on the altitude difference
     current_altitude = vehicle_altitude
@@ -144,9 +144,8 @@ def trigger_final_mechanism():
 try:
     arm_and_takeoff(20)  # Take off to 20 meters
     target_location = LocationGlobalRelative(28.5148842,77.4262819, 1.0)  # Example target
-    
     align_heading_to_target(target_location)  # Align the UAV to face the target
-    time.sleep(3)
+    time.sleep(5)
     vehicle_altitude = vehicle.location.global_relative_frame.alt
     while True:
         distance_to_target = get_distance_meters(target_location)
@@ -165,5 +164,4 @@ try:
 finally:
     print("Closing vehicle connection")
     vehicle.close()
-
 
